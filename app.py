@@ -512,20 +512,20 @@ st.markdown('<div class="hero-title">AgroSense Dashboard</div>', unsafe_allow_ht
 st.markdown('<div class="hero-sub">Hybrid Contextual Anomaly Detection · Precision Agriculture</div>',
             unsafe_allow_html=True)
 
-c1, c2, c3, c4 = st.columns(4)
-for col, label, val in zip(
-    [c1, c2, c3, c4],
-    ['F1 Score', 'Precision', 'Recall', 'AUC-ROC'],
-    [perf['f1'], perf['precision'], perf['recall'], perf['auc_roc']]
-):
-    with col:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="val">{val}</div>
-            <div class="lbl">{label}</div>
-        </div>""", unsafe_allow_html=True)
+#c1, c2, c3, c4 = st.columns(4)
+#for col, label, val in zip(
+#    [c1, c2, c3, c4],
+#    ['F1 Score', 'Precision', 'Recall', 'AUC-ROC'],
+ #   [perf['f1'], perf['precision'], perf['recall'], perf['auc_roc']]
+#):
+ #   with col:
+  #      st.markdown(f"""
+   #     <div class="metric-card">
+    #        <div class="val">{val}</div>
+     #       <div class="lbl">{label}</div>
+      #  </div>""", unsafe_allow_html=True)
 
-st.markdown("")
+#st.markdown("")
 
 # ============================================================
 # RESULTS
