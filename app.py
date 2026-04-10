@@ -3,8 +3,12 @@ import numpy as np
 import pandas as pd
 import pickle
 import os
-import tensorflow as tf
-from tensorflow.keras.models import load_model
+try:
+    from tensorflow.keras.models import load_model
+    TF_AVAILABLE = True
+except:
+    load_model = None
+    TF_AVAILABLE = False
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
