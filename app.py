@@ -178,7 +178,10 @@ def load_bundle():
             parts   = fname.replace(".keras", "").split("_")
             crop    = int(parts[1])
             region  = int(parts[2])
-            autoencoders[(crop, region)] = load_model(f"models/{fname}", compile=False)
+            if TF_AVAILABLE:
+                autoencoders[(crop, region)] = load_model(f"models/{fname}", compile=False)
+            else:
+                autoencoders[(crop, region)] = None
 
     bundle['autoencoders'] = autoencoders
     return bundle
@@ -222,11 +225,15 @@ def get_lof_score(model, X):
     return float(-model.decision_function(X)[0])
 
 def get_ae_score(ae, scaler, X):
+    if ae is None:
+        return 0.0
     Xs = scaler.transform(X)
     recon = ae.predict(Xs, verbose=0)
     return float(np.mean((Xs - recon) ** 2))
 
 def get_ae_feature_scores(ae, scaler, X):
+    if ae is None:
+        return {f: 0 for f in FEATURES}
     Xs = scaler.transform(X)
     recon = ae.predict(Xs, verbose=0)
     return dict(zip(FEATURES, (Xs - recon)[0] ** 2))
