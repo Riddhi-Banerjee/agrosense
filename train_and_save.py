@@ -430,7 +430,7 @@ bundle = {
     'yield_features':     YIELD_FEATURES,
     'performance_metrics':performance_metrics,
     'yield_model':        None,          # formula-based, not sklearn
-    'crop_base_map':      crop_base_map,
+    'crop_base_map':      crop_base_map
 }
 
 with open("models/model_bundle.pkl", "wb") as f:
