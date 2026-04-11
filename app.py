@@ -269,20 +269,32 @@ def predict(user_data):
             param_issues.append({'feature': f, 'value': val, 'status': 'HIGH',
                                   'low': low, 'high': high, 'mean': mean})
 
-    extra = {
-        'sunlight_hours':     user_data.get('sunlight_hours', 7.0),
-        'pesticide_usage_ml': user_data.get('pesticide_usage_ml', 25.0),
-        'total_days':         user_data.get('total_days', 120),
-        'season_sin':         user_data.get('season_sin', 0.0),
-        'season_cos':         user_data.get('season_cos', 1.0),
-        'crop_type':          crop_enc,
-        'region':             region_enc,
-    }
-    yield_input     = np.array([[user_data[f] for f in FEATURES] +
-                                 [extra[k] for k in ['sunlight_hours', 'pesticide_usage_ml',
-                                                      'total_days', 'season_sin', 'season_cos',
-                                                      'crop_type', 'region']]])
-    predicted_yield = float(yield_model.predict(yield_input)[0])
+        # Replace the yield prediction block in predict() with this:
+    crop_base_map = bundle['crop_base_map']
+
+    CROP_BASE = crop_base_map.get(int(crop_enc), 4000)
+
+    def formula_yield(user_data, crop_enc):
+        base = crop_base_map.get(int(crop_enc), 4000)
+        sm   = user_data.get('soil_moisture_%', 25)
+        tmp  = user_data.get('temperature_C', 24)
+        ph   = user_data.get('soil_pH', 6.5)
+        ndvi = user_data.get('NDVI_index', 0.6)
+        rain = user_data.get('rainfall_mm', 180)
+        sun  = user_data.get('sunlight_hours', 7)
+        pest = user_data.get('pesticide_usage_ml', 25)
+
+        sm_f   = 1.0 if 20<=sm<=35 else (0.6+0.02*sm if sm<20 else max(0.7,1.0-0.01*(sm-35)))
+        tmp_f  = 1.0 if 20<=tmp<=30 else (max(0.7,0.7+0.015*(tmp-10)) if tmp<20 else max(0.5,1.0-0.025*(tmp-30)))
+        ph_f   = 1.0 if 6.0<=ph<=7.0 else max(0.75, 1.0-0.1*abs(ph-6.5))
+        ndvi_f = 0.5 + 0.8*ndvi
+        rain_f = 1.0 if 100<=rain<=250 else (max(0.6,0.6+0.004*rain) if rain<100 else max(0.75,1.0-0.001*(rain-250)))
+        sun_f  = min(1.15, 0.75+0.04*sun)
+        pest_f = 1.0 if 15<=pest<=35 else max(0.85, 1.0-0.005*abs(pest-25))
+
+        return max(500.0, round(base * sm_f * tmp_f * ph_f * ndvi_f * rain_f * sun_f * pest_f, 0))
+
+    predicted_yield = formula_yield(user_data, crop_enc)
 
     return {
         'final_score':    final_score,
