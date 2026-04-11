@@ -188,7 +188,8 @@ FEATURES      = bundle['features']
 YIELD_FEATURES= bundle['yield_features']
 perf          = bundle['performance_metrics']
 yield_model   = bundle['yield_model']
-
+crop_base_map = bundle['crop_base_map']
+CROP_BASE = crop_base_map.get(int(crop_enc), 4000)
 CROP_LIST   = list(encoders['crop_type'].classes_)
 REGION_LIST = list(encoders['region'].classes_)
 
@@ -269,10 +270,7 @@ def predict(user_data):
             param_issues.append({'feature': f, 'value': val, 'status': 'HIGH',
                                   'low': low, 'high': high, 'mean': mean})
 
-        # Replace the yield prediction block in predict() with this:
-    crop_base_map = bundle['crop_base_map']
-
-    CROP_BASE = crop_base_map.get(int(crop_enc), 4000)
+        # Replace the yield prediction block in predict() with this: 
 
     def formula_yield(user_data, crop_enc):
         base = crop_base_map.get(int(crop_enc), 4000)
