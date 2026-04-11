@@ -409,7 +409,7 @@ def generate_recommendations(param_issues, fusion_detail, score,
                      f"within 24 hours to physically verify readings and check visible crop "
                      f"health before taking corrective action.")
         })
-    elif score >= best_thresh - 0.15:
+    elif score >= best_thresh - 0.1:
         recs.append({
             'type': 'caution',
             'title': 'Schedule a precautionary field check',
@@ -587,7 +587,7 @@ if run_btn:
         score = result['final_score']
 
         # FIX 5: Tendency zone = [best_thresh - 0.05, best_thresh]
-        tendency_low  = best_thresh - 0.15
+        tendency_low  = best_thresh - 0.1
         tendency_high = best_thresh
 
         # FIX 3 & 5: Decision Banner — NO score/threshold shown inside box
