@@ -32,7 +32,7 @@ html, body, [class*="css"] { font-family: 'Syne', sans-serif; }
 .main { background-color: #0d1117; }
 .stApp { background: linear-gradient(135deg, #0d1117 0%, #0f1e12 50%, #0d1117 100%); }
 
-/* FIX 1 — sidebar text white */
+/* Sidebar text white */
 section[data-testid="stSidebar"] {
     background: #0f1a12;
     border-right: 1px solid #1e3a28;
@@ -48,7 +48,28 @@ section[data-testid="stSidebar"] .stSlider [data-testid="stTickBarMin"],
 section[data-testid="stSidebar"] .stSlider [data-testid="stTickBarMax"] {
     color: #9ab5a0 !important;
 }
+section[data-testid="stSidebar"] .stNumberInput label { color: #e8f5e3 !important; }
+section[data-testid="stSidebar"] .stNumberInput input {
+    background: #1a2e1f !important;
+    color: #e8f5e3 !important;
+    border: 1px solid #2e5a3a !important;
+    border-radius: 6px !important;
+}
+section[data-testid="stSidebar"] .stRadio label { color: #e8f5e3 !important; }
+section[data-testid="stSidebar"] .stRadio > div > label { color: #e8f5e3 !important; }
 .stSlider > div > div > div > div { background: #4caf72 !important; }
+
+/* FIX 1: Analyse button text black */
+section[data-testid="stSidebar"] .stButton > button {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    background: #4caf72 !important;
+    border: none !important;
+}
+section[data-testid="stSidebar"] .stButton > button:hover {
+    background: #66bb6a !important;
+    color: #000000 !important;
+}
 
 /* Hero */
 .hero-title {
@@ -59,17 +80,6 @@ section[data-testid="stSidebar"] .stSlider [data-testid="stTickBarMax"] {
 .hero-sub {
     font-family: 'DM Mono', monospace; font-size: 0.8rem; color: #4caf72;
     letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 2rem;
-}
-
-/* Metric cards */
-.metric-card {
-    background: #161d1a; border: 1px solid #1e3a28;
-    border-radius: 12px; padding: 1.2rem 1.4rem; text-align: center;
-}
-.metric-card .val { font-size: 2rem; font-weight: 700; color: #4caf72; }
-.metric-card .lbl {
-    font-size: 0.72rem; color: #6b8f73;
-    text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px;
 }
 
 /* Result banners */
@@ -88,11 +98,13 @@ section[data-testid="stSidebar"] .stSlider [data-testid="stTickBarMax"] {
     border: 1.5px solid #f5a623; border-radius: 14px;
     padding: 1.5rem 2rem; margin: 1rem 0;
 }
-.result-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem; }
-.result-score {
-    font-family: 'DM Mono', monospace; font-size: 0.85rem;
-    color: #9ab5a0; margin-top: 0.3rem;
+/* FIX 5: Tendency box — distinct purple-ish amber */
+.result-tendency {
+    background: linear-gradient(135deg, #1e1530, #120e20);
+    border: 1.5px solid #9c6fde; border-radius: 14px;
+    padding: 1.5rem 2rem; margin: 1rem 0;
 }
+.result-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.3rem; }
 
 /* Section header */
 .section-head {
@@ -116,9 +128,9 @@ section[data-testid="stSidebar"] .stSlider [data-testid="stTickBarMax"] {
     text-transform: uppercase; letter-spacing: 0.1em;
     color: #6b8f73; margin-bottom: 4px;
 }
-.sc-value { font-size: 1.3rem; font-weight: 700; color: #e8f5e3; margin-bottom: 2px; }
+.sc-value  { font-size: 1.3rem; font-weight: 700; color: #e8f5e3; margin-bottom: 2px; }
 .sc-status { font-size: 0.82rem; margin-bottom: 4px; }
-.sc-desc { font-size: 0.78rem; color: #9ab5a0; line-height: 1.55; }
+.sc-desc   { font-size: 0.78rem; color: #9ab5a0; line-height: 1.55; }
 
 /* Recommendation cards */
 .rec-card {
@@ -128,9 +140,12 @@ section[data-testid="stSidebar"] .stSlider [data-testid="stTickBarMax"] {
 .rec-card.urgent  { border-color: #ef5350; background: #1a0808; }
 .rec-card.caution { border-color: #f5a623; background: #1a1200; }
 .rec-card.info    { border-color: #378ADD; background: #0a1520; }
-.rc-num  { font-family:'DM Mono',monospace; font-size:0.7rem; color:#4caf72; margin-bottom:4px; }
+.rc-num   { font-family:'DM Mono',monospace; font-size:0.7rem; color:#4caf72; margin-bottom:4px; }
 .rc-title { font-size:0.95rem; font-weight:600; color:#e8f5e3; margin-bottom:4px; }
 .rc-desc  { font-size:0.8rem; color:#9ab5a0; line-height:1.55; }
+
+/* Input mode toggle */
+.stRadio > div { flex-direction: row !important; gap: 1.5rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -178,7 +193,7 @@ CROP_LIST   = list(encoders['crop_type'].classes_)
 REGION_LIST = list(encoders['region'].classes_)
 
 # ============================================================
-# HELPERS — SCORES
+# SCORE HELPERS
 # ============================================================
 def encode_val(val, encoder):
     if val in encoder.classes_:
@@ -224,10 +239,10 @@ def predict(user_data):
 
     X = np.array([[user_data[f] for f in FEATURES]])
 
-    if_raw              = get_if_score(if_models[key], X)
-    lof_raw             = get_lof_score(lof_models[key], X)
-    ae_raw              = get_ae_score(autoencoders[key], scalers[key], X)
-    fs_raw, fus_detail  = get_fusion_score(user_data, key)
+    if_raw             = get_if_score(if_models[key], X)
+    lof_raw            = get_lof_score(lof_models[key], X)
+    ae_raw             = get_ae_score(autoencoders[key], scalers[key], X)
+    fs_raw, fus_detail = get_fusion_score(user_data, key)
 
     if_s  = float(norm_if.transform([[if_raw]])[0][0])
     lof_s = float(norm_lof.transform([[lof_raw]])[0][0])
@@ -248,11 +263,11 @@ def predict(user_data):
         high = seg_s[f]['high']
         mean = seg_s[f]['mean']
         if val < low:
-            param_issues.append({'feature':f,'value':val,'status':'LOW',
-                                  'low':low,'high':high,'mean':mean})
+            param_issues.append({'feature': f, 'value': val, 'status': 'LOW',
+                                  'low': low, 'high': high, 'mean': mean})
         elif val > high:
-            param_issues.append({'feature':f,'value':val,'status':'HIGH',
-                                  'low':low,'high':high,'mean':mean})
+            param_issues.append({'feature': f, 'value': val, 'status': 'HIGH',
+                                  'low': low, 'high': high, 'mean': mean})
 
     extra = {
         'sunlight_hours':     user_data.get('sunlight_hours', 7.0),
@@ -264,13 +279,13 @@ def predict(user_data):
         'region':             region_enc,
     }
     yield_input     = np.array([[user_data[f] for f in FEATURES] +
-                                 [extra[k] for k in ['sunlight_hours','pesticide_usage_ml',
-                                                      'total_days','season_sin','season_cos',
-                                                      'crop_type','region']]])
+                                 [extra[k] for k in ['sunlight_hours', 'pesticide_usage_ml',
+                                                      'total_days', 'season_sin', 'season_cos',
+                                                      'crop_type', 'region']]])
     predicted_yield = float(yield_model.predict(yield_input)[0])
 
     return {
-        'final_score': final_score,
+        'final_score':    final_score,
         'if_s': if_s, 'lof_s': lof_s, 'ae_s': ae_s, 'fus_s': fus_s,
         'fusion_detail':  fus_detail,
         'ae_feat':        get_ae_feature_scores(autoencoders[key], scalers[key], X),
@@ -281,7 +296,7 @@ def predict(user_data):
     }
 
 # ============================================================
-# HELPERS — PLAIN ENGLISH
+# PLAIN ENGLISH HELPERS
 # ============================================================
 FEATURE_LABELS = {
     'soil_moisture_%': 'Soil Moisture',
@@ -353,7 +368,7 @@ def feature_plain_english(f, val, status, low, high, crop, region):
                      f"indicate sensor miscalibration or weed overgrowth suppressing {crop}."),
         },
     }
-    default = (f"{FEATURE_LABELS.get(f,f)} reading of {val:.2f}{unit} is outside the "
+    default = (f"{FEATURE_LABELS.get(f, f)} reading of {val:.2f}{unit} is outside the "
                f"expected range of {low:.2f}–{high:.2f}{unit} for {crop} in {region}.")
     return expl.get(f, {}).get(status, default)
 
@@ -389,43 +404,52 @@ def generate_recommendations(param_issues, fusion_detail, score,
         recs.append({
             'type': 'urgent',
             'title': 'Immediate field inspection required',
-            'desc': (f"The anomaly score ({score:.3f}) exceeds the detection threshold "
-                     f"({best_thresh:.3f}). Multiple sensors are reporting abnormal conditions. "
-                     f"Visit the field within 24 hours to physically verify readings and "
-                     f"check visible crop health before taking corrective action.")
+            'desc': (f"The anomaly score exceeds the detection threshold. Multiple sensors are "
+                     f"reporting abnormal conditions for {crop} in {region}. Visit the field "
+                     f"within 24 hours to physically verify readings and check visible crop "
+                     f"health before taking corrective action.")
+        })
+    elif score >= best_thresh - 0.05:
+        recs.append({
+            'type': 'caution',
+            'title': 'Schedule a precautionary field check',
+            'desc': (f"Conditions are approaching the anomaly threshold. While not yet classified "
+                     f"as a confirmed anomaly, some readings for {crop} in {region} are moving "
+                     f"in an unfavourable direction. A precautionary inspection within 48 hours "
+                     f"is recommended to catch any developing issues early.")
         })
 
     feature_recs = {
-        ('soil_moisture_%','LOW'):  ('urgent',  'Activate emergency irrigation now',
+        ('soil_moisture_%', 'LOW'):  ('urgent',  'Activate emergency irrigation now',
             f"Soil moisture is critically low. Start drip or sprinkler irrigation within 6–12 hours. "
             f"Target the 20–35% range and monitor every 12 hours until stable."),
-        ('soil_moisture_%','HIGH'): ('caution', 'Improve field drainage immediately',
+        ('soil_moisture_%', 'HIGH'): ('caution', 'Improve field drainage immediately',
             f"Pause all irrigation. Clear drainage channels and create furrows to redirect excess water. "
             f"Watch for early root rot symptoms such as yellowing lower leaves."),
-        ('temperature_C','HIGH'):   ('urgent',  'Apply heat stress mitigation',
+        ('temperature_C',   'HIGH'): ('urgent',  'Apply heat stress mitigation',
             f"Apply reflective mulch, increase irrigation frequency, and avoid field work during "
             f"peak heat hours. Consider temporary shade netting for young plants if available."),
-        ('temperature_C','LOW'):    ('caution', 'Protect crops from cold stress',
+        ('temperature_C',   'LOW'):  ('caution', 'Protect crops from cold stress',
             f"Use frost protection cloth or row covers overnight. Delay transplanting or sowing "
             f"until temperatures return to the normal range."),
-        ('soil_pH','LOW'):          ('caution', 'Apply lime to correct soil acidity',
+        ('soil_pH',         'LOW'):  ('caution', 'Apply lime to correct soil acidity',
             f"Apply agricultural lime at 1–2 tonnes per hectare. Retest pH after 4–6 weeks. "
             f"Avoid ammonium-based fertilisers, which further acidify the soil."),
-        ('soil_pH','HIGH'):         ('caution', 'Apply sulphur to reduce soil alkalinity',
+        ('soil_pH',         'HIGH'): ('caution', 'Apply sulphur to reduce soil alkalinity',
             f"Apply elemental sulphur or acidifying fertiliser such as ammonium sulphate. "
             f"Add organic compost to gradually lower pH over the growing season."),
-        ('rainfall_mm','LOW'):      ('urgent',  'Switch to supplemental irrigation — drought risk',
+        ('rainfall_mm',     'LOW'):  ('urgent',  'Switch to supplemental irrigation — drought risk',
             f"Rainfall is far below requirements for {crop} in {region}. Begin scheduled irrigation "
             f"immediately and apply mulch to reduce evaporation losses."),
-        ('rainfall_mm','HIGH'):     ('caution', 'Monitor for flood damage and disease outbreak',
+        ('rainfall_mm',     'HIGH'): ('caution', 'Monitor for flood damage and disease outbreak',
             f"Inspect and clear drainage systems. Apply preventive fungicide within 48 hours "
             f"as wet conditions significantly increase disease risk."),
-        ('humidity_%','HIGH'):      ('caution', 'Apply preventive fungicide — disease risk elevated',
+        ('humidity_%',      'HIGH'): ('caution', 'Apply preventive fungicide — disease risk elevated',
             f"High humidity creates conditions ideal for fungal disease. Spray a broad-spectrum "
-            f"fungicide as a preventive measure and improve canopy air circulation if possible."),
-        ('NDVI_index','LOW'):       ('urgent',  'Investigate crop health decline urgently',
-            f"NDVI is critically low — inspect the field for disease, pest damage, or nutrient "
-            f"deficiency. Collect leaf samples for laboratory analysis if no visible cause is found."),
+            f"fungicide and improve canopy air circulation if possible."),
+        ('NDVI_index',      'LOW'):  ('urgent',  'Investigate crop health decline urgently',
+            f"NDVI is critically low — inspect for disease, pest damage, or nutrient deficiency. "
+            f"Collect leaf samples for laboratory analysis if no visible cause is found."),
     }
 
     for iss in param_issues:
@@ -472,6 +496,7 @@ def generate_recommendations(param_issues, fusion_detail, score,
 
     return recs
 
+
 # ============================================================
 # SIDEBAR
 # ============================================================
@@ -485,24 +510,46 @@ with st.sidebar:
     crop_sel   = st.selectbox("Crop Type", CROP_LIST)
     region_sel = st.selectbox("Region",    REGION_LIST)
 
+    # FIX 2: Input mode toggle
+    st.markdown("### Input Mode")
+    input_mode = st.radio("Choose how to enter sensor values:",
+                          ["🎚 Sliders", "🔢 Manual Entry"],
+                          horizontal=True)
+
     st.markdown("### Sensor Readings")
-    soil_moist  = st.slider("Soil Moisture (%)",   0.0,  60.0, 25.0, 0.1)
-    soil_ph     = st.slider("Soil pH",             4.0,   9.0,  6.5, 0.01)
-    temperature = st.slider("Temperature (°C)",   10.0,  55.0, 24.0, 0.1)
-    rainfall    = st.slider("Rainfall (mm)",        0.0, 400.0,180.0, 1.0)
-    humidity    = st.slider("Humidity (%)",         0.0, 100.0, 65.0, 0.1)
-    ndvi        = st.slider("NDVI Index",           0.0,   1.0,  0.6, 0.01)
+
+    if input_mode == "🎚 Sliders":
+        soil_moist  = st.slider("Soil Moisture (%)",   0.0,  60.0, 25.0, 0.1)
+        soil_ph     = st.slider("Soil pH",             4.0,   9.0,  6.5, 0.01)
+        temperature = st.slider("Temperature (°C)",   10.0,  55.0, 24.0, 0.1)
+        rainfall    = st.slider("Rainfall (mm)",        0.0, 400.0, 180.0, 1.0)
+        humidity    = st.slider("Humidity (%)",         0.0, 100.0, 65.0, 0.1)
+        ndvi        = st.slider("NDVI Index",           0.0,   1.0,  0.6, 0.01)
+    else:
+        soil_moist  = st.number_input("Soil Moisture (%)",   min_value=0.0,  max_value=60.0,  value=25.0, step=0.1,  format="%.1f")
+        soil_ph     = st.number_input("Soil pH",             min_value=4.0,  max_value=9.0,   value=6.5,  step=0.01, format="%.2f")
+        temperature = st.number_input("Temperature (°C)",    min_value=10.0, max_value=55.0,  value=24.0, step=0.1,  format="%.1f")
+        rainfall    = st.number_input("Rainfall (mm)",       min_value=0.0,  max_value=400.0, value=180.0,step=1.0,  format="%.0f")
+        humidity    = st.number_input("Humidity (%)",        min_value=0.0,  max_value=100.0, value=65.0, step=0.1,  format="%.1f")
+        ndvi        = st.number_input("NDVI Index",          min_value=0.0,  max_value=1.0,   value=0.6,  step=0.01, format="%.2f")
 
     st.markdown("### Farm Details")
-    sunlight   = st.slider("Sunlight Hours/day",  2.0,  14.0,  7.0, 0.1)
-    pesticide  = st.slider("Pesticide (ml)",       0.0,  60.0, 25.0, 0.5)
-    total_days = st.slider("Growing Days",         60,   180,  120,   1)
+    if input_mode == "🎚 Sliders":
+        sunlight   = st.slider("Sunlight Hours/day",  2.0,  14.0,  7.0, 0.1)
+        pesticide  = st.slider("Pesticide (ml)",       0.0,  60.0, 25.0, 0.5)
+        total_days = st.slider("Growing Days",         60,   180,  120,   1)
+    else:
+        sunlight   = st.number_input("Sunlight Hours/day", min_value=2.0,  max_value=14.0, value=7.0,  step=0.1, format="%.1f")
+        pesticide  = st.number_input("Pesticide (ml)",     min_value=0.0,  max_value=60.0, value=25.0, step=0.5, format="%.1f")
+        total_days = st.number_input("Growing Days",       min_value=60,   max_value=180,  value=120,  step=1)
+
     sow_month  = st.selectbox("Sowing Month",
                               ['Jan','Feb','Mar','Apr','May','Jun',
                                'Jul','Aug','Sep','Oct','Nov','Dec'])
     month_num  = ['Jan','Feb','Mar','Apr','May','Jun',
                   'Jul','Aug','Sep','Oct','Nov','Dec'].index(sow_month) + 1
 
+    # FIX 1: Button text black via CSS above
     run_btn = st.button("🔍 Analyse Farm Conditions", use_container_width=True)
 
 # ============================================================
@@ -512,21 +559,6 @@ st.markdown('<div class="hero-title">AgroSense Dashboard</div>', unsafe_allow_ht
 st.markdown('<div class="hero-sub">Hybrid Contextual Anomaly Detection · Precision Agriculture</div>',
             unsafe_allow_html=True)
 
-#c1, c2, c3, c4 = st.columns(4)
-#for col, label, val in zip(
-#    [c1, c2, c3, c4],
-#    ['F1 Score', 'Precision', 'Recall', 'AUC-ROC'],
- #   [perf['f1'], perf['precision'], perf['recall'], perf['auc_roc']]
-#):
- #   with col:
-  #      st.markdown(f"""
-   #     <div class="metric-card">
-    #        <div class="val">{val}</div>
-     #       <div class="lbl">{label}</div>
-      #  </div>""", unsafe_allow_html=True)
-
-#st.markdown("")
-
 # ============================================================
 # RESULTS
 # ============================================================
@@ -534,15 +566,15 @@ if run_btn:
     user_data = {
         'crop_type':          crop_sel,
         'region':             region_sel,
-        'soil_moisture_%':    soil_moist,
-        'soil_pH':            soil_ph,
-        'temperature_C':      temperature,
-        'rainfall_mm':        rainfall,
-        'humidity_%':         humidity,
-        'NDVI_index':         ndvi,
-        'sunlight_hours':     sunlight,
-        'pesticide_usage_ml': pesticide,
-        'total_days':         total_days,
+        'soil_moisture_%':    float(soil_moist),
+        'soil_pH':            float(soil_ph),
+        'temperature_C':      float(temperature),
+        'rainfall_mm':        float(rainfall),
+        'humidity_%':         float(humidity),
+        'NDVI_index':         float(ndvi),
+        'sunlight_hours':     float(sunlight),
+        'pesticide_usage_ml': float(pesticide),
+        'total_days':         int(total_days),
         'season_sin':         np.sin(2 * np.pi * month_num / 12),
         'season_cos':         np.cos(2 * np.pi * month_num / 12),
     }
@@ -554,43 +586,57 @@ if run_btn:
     else:
         score = result['final_score']
 
-        # ---- Decision Banner ----
+        # FIX 5: Tendency zone = [best_thresh - 0.05, best_thresh]
+        tendency_low  = best_thresh - 0.05
+        tendency_high = best_thresh
+
+        # FIX 3 & 5: Decision Banner — NO score/threshold shown inside box
         if score > best_thresh:
             st.markdown(f"""
             <div class="result-anomaly">
                 <div class="result-title" style="color:#ef5350;">⚠ Anomaly Detected</div>
-                <div class="result-score">
-                    Ensemble Score: {score:.3f} &nbsp;|&nbsp; Threshold: {best_thresh:.3f}
-                </div>
                 <div style="font-size:0.85rem;color:#ef9a9a;margin-top:0.5rem;">
-                    Abnormal farming conditions identified for
+                    Abnormal farming conditions have been identified for
                     <strong>{crop_sel}</strong> in <strong>{region_sel}</strong>.
-                    Review sensor analysis and follow recommended actions below.
+                    The sensor readings are significantly outside the expected pattern for
+                    this crop and region. Review the sensor analysis and follow the
+                    recommended actions on the right.
                 </div>
             </div>""", unsafe_allow_html=True)
+
+        elif tendency_low <= score <= tendency_high:
+            st.markdown(f"""
+            <div class="result-tendency">
+                <div class="result-title" style="color:#9c6fde;">🔮 Tendency Towards Anomaly</div>
+                <div style="font-size:0.85rem;color:#c9a8f5;margin-top:0.5rem;">
+                    Conditions for <strong>{crop_sel}</strong> in <strong>{region_sel}</strong>
+                    are on the edge of being classified as anomalous. The readings are not yet
+                    at an alarm level, but the pattern is shifting in an unfavourable direction.
+                    This is an early warning — monitor closely over the next 24–48 hours and
+                    take precautionary action where recommended below.
+                </div>
+            </div>""", unsafe_allow_html=True)
+
         elif score >= 0.5:
             st.markdown(f"""
             <div class="result-borderline">
                 <div class="result-title" style="color:#f5a623;">⚡ Borderline Conditions</div>
-                <div class="result-score">
-                    Ensemble Score: {score:.3f} &nbsp;|&nbsp; Threshold: {best_thresh:.3f}
-                </div>
                 <div style="font-size:0.85rem;color:#ffe082;margin-top:0.5rem;">
-                    Readings are approaching the anomalous range for
-                    <strong>{crop_sel}</strong> in <strong>{region_sel}</strong>.
+                    Readings for <strong>{crop_sel}</strong> in <strong>{region_sel}</strong>
+                    are approaching the anomalous range. Some sensors are showing values that
+                    are higher than usual but have not yet crossed the anomaly boundary.
                     Monitor closely and review recommendations below.
                 </div>
             </div>""", unsafe_allow_html=True)
+
         else:
             st.markdown(f"""
             <div class="result-normal">
                 <div class="result-title" style="color:#66bb6a;">✓ Conditions Normal</div>
-                <div class="result-score">
-                    Ensemble Score: {score:.3f} &nbsp;|&nbsp; Threshold: {best_thresh:.3f}
-                </div>
                 <div style="font-size:0.85rem;color:#a5d6a7;margin-top:0.5rem;">
                     All sensor readings are within the expected range for
                     <strong>{crop_sel}</strong> in <strong>{region_sel}</strong>.
+                    The field conditions are healthy. No immediate action is required.
                 </div>
             </div>""", unsafe_allow_html=True)
 
@@ -599,13 +645,13 @@ if run_btn:
         # ============================================================
         left_col, right_col = st.columns([1, 1])
 
-        # ---- LEFT: Sensor-by-Sensor Analysis + Fusion ----
+        # ---- LEFT: Sensor Analysis ----
         with left_col:
             st.markdown('<div class="section-head">Sensor-by-Sensor Analysis</div>',
                         unsafe_allow_html=True)
 
-            seg_s          = result['seg_stats']
-            issues_map     = {iss['feature']: iss for iss in result['param_issues']}
+            seg_s      = result['seg_stats']
+            issues_map = {iss['feature']: iss for iss in result['param_issues']}
 
             for f in FEATURES:
                 if f not in seg_s: continue
@@ -622,14 +668,14 @@ if run_btn:
                     status_html = (f'<span style="color:#ef5350;font-weight:600;">'
                                    f'{icon} {status} — outside normal range '
                                    f'({low:.2f}–{high:.2f}{unit})</span>')
-                    desc = feature_plain_english(f, val, status, low, high,
-                                                 crop_sel, region_sel)
+                    desc     = feature_plain_english(f, val, status, low, high,
+                                                     crop_sel, region_sel)
                     card_cls = 'anomaly'
                 else:
                     status_html = (f'<span style="color:#4caf72;font-weight:600;">'
                                    f'✓ Normal — within range ({low:.2f}–{high:.2f}{unit})</span>')
-                    desc = (f"Reading of {val:.2f}{unit} is within the expected range "
-                            f"for {crop_sel} in {region_sel}. No action needed.")
+                    desc     = (f"Reading of {val:.2f}{unit} is within the expected range "
+                                f"for {crop_sel} in {region_sel}. No action needed.")
                     card_cls = 'ok'
 
                 st.markdown(f"""
@@ -640,7 +686,7 @@ if run_btn:
                     <div class="sc-desc">{desc}</div>
                 </div>""", unsafe_allow_html=True)
 
-            # Sensor Fusion
+            # Sensor Fusion Analysis
             st.markdown('<div class="section-head">Sensor Consistency Analysis</div>',
                         unsafe_allow_html=True)
 
@@ -648,17 +694,17 @@ if run_btn:
             if fd:
                 for pair, z in fd.items():
                     if z > 2.0:
-                        card_cls   = 'anomaly'
-                        z_html     = (f'<span style="color:#ef5350;font-weight:600;">'
-                                      f'⚠ Inconsistent — {z:.1f}σ above expected</span>')
+                        card_cls = 'anomaly'
+                        z_html   = (f'<span style="color:#ef5350;font-weight:600;">'
+                                    f'⚠ Inconsistent — {z:.1f}σ above expected</span>')
                     elif z > 1.0:
-                        card_cls   = 'warning'
-                        z_html     = (f'<span style="color:#f5a623;font-weight:600;">'
-                                      f'⚡ Slight deviation — {z:.1f}σ</span>')
+                        card_cls = 'warning'
+                        z_html   = (f'<span style="color:#f5a623;font-weight:600;">'
+                                    f'⚡ Slight deviation — {z:.1f}σ</span>')
                     else:
-                        card_cls   = 'ok'
-                        z_html     = (f'<span style="color:#4caf72;font-weight:600;">'
-                                      f'✓ Consistent — {z:.1f}σ (normal)</span>')
+                        card_cls = 'ok'
+                        z_html   = (f'<span style="color:#4caf72;font-weight:600;">'
+                                    f'✓ Consistent — {z:.1f}σ (normal)</span>')
 
                     pair_label = pair.replace('_', ' ').replace('%', '')
                     desc = fusion_plain_english(pair, z, crop_sel, region_sel)
@@ -713,15 +759,16 @@ if run_btn:
             st.plotly_chart(fig_yield, use_container_width=True)
 
             diff     = pred_yield - 4033
-            diff_txt = f"{'above' if diff >= 0 else 'below'} the regional average of 4,033 kg/ha"
+            diff_txt = f"{'above' if diff >= 0 else 'below'} the dataset average of 4,033 kg/ha"
             yld_col  = '#4caf72' if diff >= 0 else '#ef5350'
             yld_card = 'ok' if diff >= 0 else 'anomaly'
             st.markdown(f"""
             <div class="sensor-card {yld_card}" style="margin-top:0;">
                 <div class="sc-desc">
-                    Predicted yield is <strong style="color:{yld_col};">{pred_yield:.0f} kg/ha</strong>
+                    Predicted yield is
+                    <strong style="color:{yld_col};">{pred_yield:.0f} kg/ha</strong>
                     — {abs(diff):.0f} kg/ha {diff_txt}.
-                    {'Good growing conditions support a strong harvest.' if diff >= 0
+                    {'Good conditions support a strong harvest.' if diff >= 0
                      else 'The detected anomalies are likely contributing to this yield reduction.'}
                 </div>
             </div>""", unsafe_allow_html=True)
@@ -750,18 +797,19 @@ if run_btn:
                     <div class="rc-desc">{rec['desc']}</div>
                 </div>""", unsafe_allow_html=True)
 
+# FIX 4: Landing state — NO model names shown
 else:
     st.markdown("""
-    <div style="text-align:center; padding:3rem 1rem;">
-        <div style="font-size:4rem;">🌾</div>
-        <div style="font-family:'Syne',sans-serif; font-size:1.2rem;
-                    color:#6b8f73; margin-top:1rem;">
-            Configure sensor values in the sidebar and click<br>
-            <strong style="color:#4caf72;">Analyse Farm Conditions</strong>
-        </div>
-        <div style="font-family:'DM Mono',monospace; font-size:0.75rem;
-                    color:#2d4a35; margin-top:1.5rem; letter-spacing:0.1em;">
-            ISOLATION FOREST · LOF · AUTOENCODER · SENSOR FUSION
+    <div style="text-align:center; padding:4rem 1rem;">
+        <div style="font-size:5rem;">🌾</div>
+        <div style="font-family:'Syne',sans-serif; font-size:1.3rem;
+                    color:#6b8f73; margin-top:1rem; line-height:1.8;">
+            Select your crop type and region,<br>
+            enter sensor readings in the sidebar,<br>
+            then click<br>
+            <strong style="color:#4caf72; font-size:1.1rem;">
+                🔍 Analyse Farm Conditions
+            </strong>
         </div>
     </div>
     """, unsafe_allow_html=True)
