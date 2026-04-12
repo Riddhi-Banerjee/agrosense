@@ -186,7 +186,19 @@ encoders      = bundle['encoders']
 segment_stats = bundle['segment_stats']
 FEATURES      = bundle['features']
 perf          = bundle['performance_metrics']
-crop_base_map = bundle['crop_base_map']   # yield formula base yields
+# Build crop_base_map from bundle if available, otherwise construct from encoder
+# (handles old model_bundle.pkl saved before crop_base_map was added)
+if 'crop_base_map' in bundle:
+    crop_base_map = bundle['crop_base_map']
+else:
+    _base_yields  = {
+        'Cotton': 3800, 'Maize': 5500, 'Rice': 4500,
+        'Soybean': 3200, 'Wheat': 4800
+    }
+    crop_base_map = {}
+    for name in encoders['crop_type'].classes_:
+        enc = int(encoders['crop_type'].transform([name])[0])
+        crop_base_map[enc] = _base_yields.get(name, 4000)
 
 CROP_LIST   = list(encoders['crop_type'].classes_)
 REGION_LIST = list(encoders['region'].classes_)
